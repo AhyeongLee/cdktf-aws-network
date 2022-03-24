@@ -1,4 +1,4 @@
-import { Vpc } from "@cdktf/provider-aws/lib/vpc";
+import { InternetGateway, Vpc } from "@cdktf/provider-aws/lib/vpc";
 import { Construct } from "constructs";
 
 export interface AwsVpcConfig {
@@ -10,7 +10,8 @@ export interface AwsVpcConfig {
 }
 
 export class AwsVpc extends Construct {
-  public readonly rescource: Vpc;
+  public readonly resource: Vpc;
+  public readonly internetGateway: InternetGateway;
   /**
    * @param scope
    * @param resourceCode - 기본적으로 "VPC"로 설정
@@ -23,6 +24,11 @@ export class AwsVpc extends Construct {
     super(scope, name);
 
     const vpc = new Vpc(this, name, config);
-    this.rescource = vpc;
+    this.resource = vpc;
+
+    this.internetGateway = new InternetGateway(scope, `${tags["Project"]}-${tags["Stage"]}-${resourceCode}-IGW`, {
+      vpcId: this.resource.id,
+      tags,
+    });
   }
 }
