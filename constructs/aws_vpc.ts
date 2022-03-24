@@ -1,5 +1,6 @@
-import { InternetGateway, Vpc } from "@cdktf/provider-aws/lib/vpc";
+import { Vpc } from "@cdktf/provider-aws/lib/vpc";
 import { Construct } from "constructs";
+import { AwsInternetGateway } from "./aws_igw";
 
 export interface AwsVpcConfig {
   readonly assignGeneratedIpv6CidrBlock: boolean;
@@ -11,7 +12,7 @@ export interface AwsVpcConfig {
 
 export class AwsVpc extends Construct {
   public readonly resource: Vpc;
-  public readonly internetGateway: InternetGateway;
+  public readonly internetGateway: AwsInternetGateway;
   /**
    * @param scope
    * @param resourceCode - 기본적으로 "VPC"로 설정
@@ -20,15 +21,19 @@ export class AwsVpc extends Construct {
    * @param tags
    */
   constructor(scope: Construct, resourceCode = "VPC", config: AwsVpcConfig, tags: { [key: string]: string }) {
-    const name = `${tags["Project"]}-${tags["Stage"]}-${resourceCode}`;
-    super(scope, name);
+    const vpcTags = JSON.parse(JSON.stringify(tags));
+    vpcTags.Name = `${tags["Project"]}-${tags["Stage"]}-${resourceCode}`;
+    super(scope, vpcTags.Name);
 
-    const vpc = new Vpc(this, name, config);
-    this.resource = vpc;
-
-    this.internetGateway = new InternetGateway(scope, `${tags["Project"]}-${tags["Stage"]}-${resourceCode}-IGW`, {
-      vpcId: this.resource.id,
-      tags,
+    const vpc = new Vpc(this, vpcTags.Name, {
+      assignGeneratedIpv6CidrBlock: config.assignGeneratedIpv6CidrBlock,
+      cidrBlock: config.cidrBlock,
+      enableDnsHostnames: config.enableDnsHostnames,
+      enableDnsSupport: config.enableDnsSupport,
+      instanceTenancy: config.instanceTenancy,
+      tags: vpcTags,
     });
+    this.resource = vpc;
+    this.internetGateway = new AwsInternetGateway(this, "IGW", this.resource.id, tags);
   }
 }

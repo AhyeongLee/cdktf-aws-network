@@ -31,7 +31,7 @@ class NetworkStack extends TerraformStack {
     const awsSubnetConfigs = JSON.parse(JSON.stringify(awsSubnetConfigsJson));
     const awsSubnets: AwsSubnet[] = [];
     for (const awsSubnetConfig of awsSubnetConfigs) {
-      awsSubnets.push(new AwsSubnet(this, "SBN", awsSubnetConfig, vpc.rescource.id, defaultTags));
+      awsSubnets.push(new AwsSubnet(this, "SBN", awsSubnetConfig, vpc.resource.id, defaultTags));
     }
   }
 }

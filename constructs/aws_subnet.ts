@@ -26,17 +26,18 @@ export class AwsSubnet extends Construct {
   constructor(scope: Construct, resourceCode = "SBN", config: AwsSubnetConfig, vpcId: string, tags: { [key: string]: string }) {
     const zone: string = config.availabilityZone.substr(-1).toUpperCase();
     const usage = config.usage.toUpperCase();
-    const name = `${tags["Project"]}-${tags["Stage"]}-${resourceCode}-${usage}-${zone}`;
+    const subnetTags = JSON.parse(JSON.stringify(tags));
+    subnetTags.Name = `${tags["Project"]}-${tags["Stage"]}-${resourceCode}-${usage}-${zone}`;
 
-    super(scope, name);
+    super(scope, subnetTags.Name);
 
-    const subnet = new Subnet(this, name, {
+    const subnet = new Subnet(this, subnetTags.Name, {
       assignIpv6AddressOnCreation: config.assignIpv6AddressOnCreation,
       cidrBlock: config.cidrBlock,
       mapPublicIpOnLaunch: config.mapPublicIpOnLaunch,
       availabilityZone: config.availabilityZone,
-      vpcId: vpcId,
-      tags: tags,
+      vpcId,
+      tags: subnetTags,
     });
     this.resource = subnet;
 

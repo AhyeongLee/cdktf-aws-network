@@ -1,6 +1,6 @@
-import { Eip } from "@cdktf/provider-aws/lib/ec2";
 import { NatGateway } from "@cdktf/provider-aws/lib/vpc";
 import { Construct } from "constructs";
+import { AwsEip } from "./aws_eip";
 
 export interface AwsNatGatewayConfig {
   readonly connectivityType: string;
@@ -21,17 +21,16 @@ export class AwsNatGateway extends Construct {
    */
   constructor(scope: Construct, resourceCode = "NAT", subnetId: string, zone: string, config: AwsNatGatewayConfig, tags: { [key: string]: string }) {
     const usage = config.usage.toUpperCase();
-    const name = `${tags["Project"]}-${tags["Stage"]}-${resourceCode}-${usage}-${zone}`;
-    super(scope, name);
+    const natTags = JSON.parse(JSON.stringify(tags));
+    natTags.Name = `${tags["Project"]}-${tags["Stage"]}-${resourceCode}-${usage}-${zone}`;
+    super(scope, natTags.Name);
 
     // 연결 유형이 public 이면 EIP 생성 후 할당
-    // NatGateway 이름이 AYLEE-DEV-NAT-PRI-A 일 때,
-    // Eip 이름은 AYLEE-DEV-EIP-NAT-PRI-A
-    const natGateway = new NatGateway(this, name, {
+    const natGateway = new NatGateway(this, natTags.Name, {
       subnetId,
       connectivityType: config.connectivityType,
-      allocationId:
-        config.connectivityType === "public" ? new Eip(this, `${tags["Project"]}-${tags["Stage"]}-EIP-${resourceCode}-${zone}`).allocationId : undefined,
+      allocationId: config.connectivityType === "public" ? new AwsEip(this, "NAT-EIP", usage, zone, tags).resource.allocationId : undefined,
+      tags: natTags,
     });
     this.resource = natGateway;
   }
