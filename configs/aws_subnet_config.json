@@ -1,0 +1,44 @@
+[
+  {
+    "assignIpv6AddressOnCreation": false,
+    "cidrBlock": "10.1.0.0/24",
+    "mapPublicIpOnLaunch": false,
+    "availabilityZone": "ap-northeast-2a",
+    "usage": "PRI",
+    "awsNatGatewayConfigs": [
+      {
+        "connectivityType": "public",
+        "usage": "PRI"
+      }
+    ]
+  },
+  {
+    "assignIpv6AddressOnCreation": false,
+    "cidrBlock": "10.1.1.0/24",
+    "mapPublicIpOnLaunch": false,
+    "availabilityZone": "ap-northeast-2c",
+    "usage": "PRI",
+    "awsNatGatewayConfigs": [
+      {
+        "connectivityType": "public",
+        "usage": "PRI"
+      }
+    ]
+  },
+  {
+    "assignIpv6AddressOnCreation": false,
+    "cidrBlock": "10.1.2.0/24",
+    "mapPublicIpOnLaunch": false,
+    "availabilityZone": "ap-northeast-2a",
+    "usage": "PUB",
+    "awsNatGatewayConfigs": []
+  },
+  {
+    "assignIpv6AddressOnCreation": false,
+    "cidrBlock": "10.1.3.0/24",
+    "mapPublicIpOnLaunch": false,
+    "availabilityZone": "ap-northeast-2c",
+    "usage": "PUB",
+    "awsNatGatewayConfigs": []
+  }
+]
