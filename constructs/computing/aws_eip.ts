@@ -10,7 +10,7 @@ export class AwsEip extends Construct {
    * @param zone - NatGateway의 AZ 사용
    * @param tags
    */
-  constructor(scope: Construct, resourceCode = "NAT-EIP", usage: string, zone: string, tags: { [key: string]: string }) {
+  constructor(scope: Construct, resourceCode = "EIP", usage: string, zone: string, tags: { [key: string]: string }) {
     const eipTags = JSON.parse(JSON.stringify(tags));
     eipTags.Name = `${tags["Project"]}-${tags["Stage"]}-${resourceCode}-${usage}-${zone}`;
     super(scope, eipTags.Name);

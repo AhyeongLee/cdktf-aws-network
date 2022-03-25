@@ -1,10 +1,14 @@
 import { Construct } from "constructs";
 import { App, TerraformStack } from "cdktf";
 import { AwsProvider } from "@cdktf/provider-aws";
-import { AwsVpc, AwsVpcConfig } from "./constructs/aws_vpc";
-import { AwsSubnet, AwsSubnetConfig } from "./constructs/aws_subnet";
+import { AwsVpc, AwsVpcConfig } from "./constructs/network/aws_vpc";
+import { AwsSubnet, AwsSubnetConfig } from "./constructs/network/aws_subnet";
+import { AwsRouteTable, AwsRouteTableConfig } from "./constructs/network/aws_route_table";
+import { AwsEc2, AwsEc2ConfigCreatingKeyPair } from "./constructs/computing/aws_ec2";
 import * as awsSubnetConfigsJson from "./configs/aws_subnet_config.json";
-import { AwsRouteTable, AwsRouteTableConfig } from "./constructs/aws_route_table";
+import * as awsBastionConfigJson from "./configs/aws_bastion_config.json";
+import { TlsProvider } from "@cdktf/provider-tls";
+import { Eip } from "@cdktf/provider-aws/lib/ec2";
 
 class NetworkStack extends TerraformStack {
   constructor(scope: Construct, name: string) {
@@ -26,6 +30,8 @@ class NetworkStack extends TerraformStack {
       region: "ap-northeast-2",
       profile: "aylee",
     });
+
+    new TlsProvider(this, "TLS");
 
     const vpc = new AwsVpc(this, "VPC", awsVpcConfig, defaultTags);
 
@@ -76,6 +82,13 @@ class NetworkStack extends TerraformStack {
     for (const config of additionalSubnetsConfig) {
       additionalSubnets.push(new AwsSubnet(this, "SBN", config, vpc.resource.id, defaultTags));
     }
+
+    const awsBastionConfig: AwsEc2ConfigCreatingKeyPair = JSON.parse(JSON.stringify(awsBastionConfigJson));
+
+    const bastion = new AwsEc2(this, "EC2", vpc.resource.id, publicSubnets[0].resource.id, awsBastionConfig, defaultTags);
+    new Eip(this, `${defaultTags.Project}-${defaultTags.Stage}-EIP-EC2-${awsBastionConfig.usage}`, {
+      instance: bastion.resource.id,
+    });
   }
 }
 

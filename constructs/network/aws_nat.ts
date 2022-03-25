@@ -1,6 +1,6 @@
 import { NatGateway } from "@cdktf/provider-aws/lib/vpc";
 import { Construct } from "constructs";
-import { AwsEip } from "./aws_eip";
+import { AwsEip } from "../computing/aws_eip";
 
 export interface AwsNatGatewayConfig {
   readonly connectivityType: string;
