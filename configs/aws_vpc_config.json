@@ -1,0 +1,7 @@
+{
+  "assignGeneratedIpv6CidrBlock": false,
+  "cidrBlock": "10.1.0.0/16",
+  "enableDnsHostnames": true,
+  "enableDnsSupport": true,
+  "instanceTenancy": "default"
+}

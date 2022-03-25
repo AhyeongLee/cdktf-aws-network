@@ -5,10 +5,11 @@ import { AwsVpc, AwsVpcConfig } from "./constructs/network/aws_vpc";
 import { AwsSubnet, AwsSubnetConfig } from "./constructs/network/aws_subnet";
 import { AwsRouteTable, AwsRouteTableConfig } from "./constructs/network/aws_route_table";
 import { AwsEc2, AwsEc2ConfigCreatingKeyPair } from "./constructs/computing/aws_ec2";
-import * as awsSubnetConfigsJson from "./configs/aws_subnet_config.json";
-import * as awsBastionConfigJson from "./configs/aws_bastion_config.json";
 import { TlsProvider } from "@cdktf/provider-tls";
 import { Eip } from "@cdktf/provider-aws/lib/ec2";
+import * as awsSubnetConfigsJson from "./configs/aws_subnet_config.json";
+import * as awsBastionConfigJson from "./configs/aws_bastion_config.json";
+import * as awsVpcConfigJson from "./configs/aws_vpc_config.json";
 
 class NetworkStack extends TerraformStack {
   constructor(scope: Construct, name: string) {
@@ -18,13 +19,6 @@ class NetworkStack extends TerraformStack {
       Project: "AYLEE",
       Stage: "DEV",
     };
-    const awsVpcConfig: AwsVpcConfig = {
-      assignGeneratedIpv6CidrBlock: false,
-      cidrBlock: "10.1.0.0/16",
-      enableDnsHostnames: true,
-      enableDnsSupport: true,
-      instanceTenancy: "default",
-    };
 
     new AwsProvider(this, "AWS", {
       region: "ap-northeast-2",
@@ -33,10 +27,14 @@ class NetworkStack extends TerraformStack {
 
     new TlsProvider(this, "TLS");
 
+    // VPC 생성
+    const awsVpcConfig: AwsVpcConfig = JSON.parse(JSON.stringify(awsVpcConfigJson));
     const vpc = new AwsVpc(this, "VPC", awsVpcConfig, defaultTags);
 
+    // Subnet 구성 파일
     const awsSubnetConfigs = JSON.parse(JSON.stringify(awsSubnetConfigsJson));
 
+    // 기본 Public Subnet 생성 (InternetGateway 생성)
     const publicSubnets: AwsSubnet[] = [];
     const publicSubnetsConfig: AwsSubnetConfig[] = awsSubnetConfigs.publicSubnets;
     for (const config of publicSubnetsConfig) {
@@ -55,6 +53,8 @@ class NetworkStack extends TerraformStack {
       };
       new AwsRouteTable(this, "RT", publicSubnet.resource.id, rtConfig, defaultTags);
     }
+
+    // 기본 Private Subnet 생성 (public NatGateway 연결)
     const privateSubnets: AwsSubnet[] = [];
     const privateSubnetsConfig: AwsSubnetConfig[] = awsSubnetConfigs.privateSubnets;
     for (const index in privateSubnetsConfig) {
@@ -77,6 +77,8 @@ class NetworkStack extends TerraformStack {
       };
       new AwsRouteTable(this, "RT", privateSubnet.resource.id, rtConfig, defaultTags);
     }
+
+    // 추가 Subnet 생성
     const additionalSubnets: AwsSubnet[] = [];
     const additionalSubnetsConfig: AwsSubnetConfig[] = awsSubnetConfigs.additionalSubnets;
     for (const config of additionalSubnetsConfig) {
@@ -85,7 +87,9 @@ class NetworkStack extends TerraformStack {
 
     const awsBastionConfig: AwsEc2ConfigCreatingKeyPair = JSON.parse(JSON.stringify(awsBastionConfigJson));
 
+    // Bastion 생성
     const bastion = new AwsEc2(this, "EC2", vpc.resource.id, publicSubnets[0].resource.id, awsBastionConfig, defaultTags);
+    // Bastion에 퍼블릭IP 할당
     new Eip(this, `${defaultTags.Project}-${defaultTags.Stage}-EIP-EC2-${awsBastionConfig.usage}`, {
       instance: bastion.resource.id,
     });

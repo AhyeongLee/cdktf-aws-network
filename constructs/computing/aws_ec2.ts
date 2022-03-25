@@ -21,7 +21,15 @@ export type AwsEc2Config = AwsEc2ConfigCreatingKeyPair | AwsEc2ConfigExistingKey
 
 export class AwsEc2 extends Construct {
   public readonly resource: ec2.Instance;
-  constructor(scope: Construct, resourceCode: string, vpcId: string, subnetId: string, config: AwsEc2Config, tags: { [key: string]: string }) {
+  /**
+   * @param scope
+   * @param resourceCode - 기본 "EC2"
+   * @param vpcId - SecurityGroup을 생성할 VPC
+   * @param subnetId - EC2를 생성할 Subnet
+   * @param config
+   * @param tags
+   */
+  constructor(scope: Construct, resourceCode = "EC2", vpcId: string, subnetId: string, config: AwsEc2Config, tags: { [key: string]: string }) {
     const usage = config.usage.toUpperCase();
     const ec2Tags = JSON.parse(JSON.stringify(tags));
     ec2Tags.Name = `${tags["Project"]}-${tags["Stage"]}-${resourceCode}-${usage}`;

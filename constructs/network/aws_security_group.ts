@@ -8,7 +8,15 @@ export interface AwsSecurityGroupConfig {
 
 export class AwsSecurityGroup extends Construct {
   public readonly resource: SecurityGroup;
-  constructor(scope: Construct, resourceCode: string, usage: string, vpcId: string, config: AwsSecurityGroupConfig, tags: { [key: string]: string }) {
+  /**
+   * @param scope
+   * @param resourceCode - 기본 "SG"
+   * @param usage
+   * @param vpcId - SG를 생성할 VPC id (vpcId를 지정하지 않고 SG를 생성하면 default VPC에 subnet이 생성됨)
+   * @param config
+   * @param tags
+   */
+  constructor(scope: Construct, resourceCode = "SG", usage: string, vpcId: string, config: AwsSecurityGroupConfig, tags: { [key: string]: string }) {
     const sgTags = JSON.parse(JSON.stringify(tags));
     sgTags.Name = `${tags["Project"]}-${tags["Stage"]}-${resourceCode}-${usage}`;
     super(scope, sgTags.Name);
