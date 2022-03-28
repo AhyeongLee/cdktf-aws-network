@@ -10,6 +10,7 @@ import * as awsSubnetConfigsJson from "./configs/aws_subnet_config.json";
 import * as awsBastionConfigJson from "./configs/aws_bastion_config.json";
 import * as awsVpcConfigJson from "./configs/aws_vpc_config.json";
 import { AwsEip } from "./constructs/computing/aws_eip";
+import { EipAssociation } from "@cdktf/provider-aws/lib/ec2";
 
 class NetworkStack extends TerraformStack {
   constructor(scope: Construct, name: string) {
@@ -89,9 +90,16 @@ class NetworkStack extends TerraformStack {
 
     // Bastion 생성
     const bastion = new AwsEc2(this, "EC2", vpc.resource.id, publicSubnets[0].resource.id, awsBastionConfig, defaultTags);
+    // new AwsEc2(this, "EC2-tessst", vpc.resource.id, publicSubnets[0].resource.id, awsBastionConfig, defaultTags);
 
-    // Bastion에 퍼블릭IP 할당
-    new AwsEip(this, "EIP", `EC2-${awsBastionConfig.usage}`,defaultTags, bastion.resource.id);
+    // Bastion에 할당 할 퍼블릭IP 생성
+    const eipForBastion = new AwsEip(this, "EIP", `EC2-${awsBastionConfig.usage}`,defaultTags);
+
+    // 퍼블릭IP Bastion에 연결
+    new EipAssociation(this, "BASTION-EIP-ASS", {
+      instanceId: bastion.resource.id,
+      allocationId: eipForBastion.resource.allocationId,
+    });
   }
 }
 

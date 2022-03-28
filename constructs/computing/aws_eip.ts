@@ -9,14 +9,13 @@ export class AwsEip extends Construct {
    * @param usage 
    * @param tags
    */
-  constructor(scope: Construct, resourceCode = "EIP", usage: string, tags: { [key: string]: string }, instanceId?: string) {
+  constructor(scope: Construct, resourceCode = "EIP", usage: string, tags: { [key: string]: string }) {
     const eipTags = JSON.parse(JSON.stringify(tags));
     eipTags.Name = `${tags["Project"]}-${tags["Stage"]}-${resourceCode}-${usage}`;
     super(scope, eipTags.Name);
 
     this.resource = new Eip(this, eipTags.Name, {
       tags: eipTags,
-      instance: (instanceId) ? instanceId : undefined,
     });
   }
 }

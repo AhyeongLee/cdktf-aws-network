@@ -28,6 +28,12 @@ export class AwsKeyPair extends Construct {
           command: "echo " + `'${rsaKey.privateKeyPem}'` + " > ./" + `${keyName}` + ".pem",
         },
       },
+      {
+        "local-exec": {
+          command: "rm -f ./" + `${keyName}` + ".pem",
+          when: "destroy",
+        }
+      }
     ]);
   }
 }

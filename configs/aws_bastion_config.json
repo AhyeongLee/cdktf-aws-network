@@ -3,6 +3,7 @@
   "usage": "BASTION",
   "ami": "ami-033a6a056910d1137",
   "instanceType": "t3.micro",
+  "associatePublicIpAddress": true,
   "securityGroupConfig": {
     "ingressList": [
       {

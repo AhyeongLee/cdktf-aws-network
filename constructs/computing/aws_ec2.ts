@@ -9,6 +9,7 @@ export interface AwsEc2ConfigCreatingKeyPair {
   ami: string;
   instanceType: string;
   securityGroupConfig: AwsSecurityGroupConfig;
+  associatePublicIpAddress: boolean;
 }
 export interface AwsEc2ConfigExistingKeyPair {
   keyName: string;
@@ -16,6 +17,7 @@ export interface AwsEc2ConfigExistingKeyPair {
   ami: string;
   instanceType: string;
   securityGroupConfig: AwsSecurityGroupConfig;
+  associatePublicIpAddress: boolean;
 }
 export type AwsEc2Config = AwsEc2ConfigCreatingKeyPair | AwsEc2ConfigExistingKeyPair;
 
@@ -42,14 +44,26 @@ export class AwsEc2 extends Construct {
       keyName = new AwsKeyPair(this, `${ec2Tags.Name}-KEY`).resource.keyName;
     }
 
-    const sgId = new AwsSecurityGroup(this, "SG", usage, vpcId, config.securityGroupConfig, tags).resource.id;
+    /**
+     * associatePublicIpAddress
+     *  associatePublicIpAddress의 값이 변경되면 forces replacement 이기 때문에 기존 EC2 인스턴스가 종료 됨.
+     *  associatePublicIpAddress를 false로 설정하고 EIP를 할당하면, 자동으로 associatePublicIpAddress가 true가 되기 때문에
+     *  변경사항이 없어도 재배포가 일어나면 associatePublicIpAddress true -> false # forces replacement
+     *  따라서 EIP를 할당 예정이라면 associatePublicIpAddress를 true로 설정.
+     * 
+     * vpcSecurityGroupIds
+     *  vpcSecurityGroupIds말고 securityGroups로 하면 forces replacement 됨.
+     *  Terraform Docs를 보면 security_groups는 EC2-Classic 또는 default VPC에서만 사용하라고 나와 있음.
+     */
     this.resource = new ec2.Instance(this, ec2Tags.Name, {
       keyName,
       ami: config.ami,
       instanceType: config.instanceType,
       subnetId,
-      associatePublicIpAddress: false,
-      securityGroups: [sgId],
+      associatePublicIpAddress: config.associatePublicIpAddress,
+      vpcSecurityGroupIds: [
+        new AwsSecurityGroup(this, "SG", usage, vpcId, config.securityGroupConfig, tags).resource.id
+      ], 
       tags: ec2Tags,
     });
   }
