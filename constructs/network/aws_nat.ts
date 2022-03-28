@@ -29,7 +29,7 @@ export class AwsNatGateway extends Construct {
     const natGateway = new NatGateway(this, natTags.Name, {
       subnetId,
       connectivityType: config.connectivityType,
-      allocationId: config.connectivityType === "public" ? new AwsEip(this, "NAT-EIP", usage, zone, tags).resource.allocationId : undefined,
+      allocationId: config.connectivityType === "public" ? new AwsEip(this, "EIP", `${resourceCode}-${usage}-${zone}`, tags).resource.allocationId : undefined,
       tags: natTags,
     });
     this.resource = natGateway;
