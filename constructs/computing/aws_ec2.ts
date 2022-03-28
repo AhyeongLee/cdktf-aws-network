@@ -1,6 +1,8 @@
 import { ec2 } from "@cdktf/provider-aws";
+import { EipAssociation } from "@cdktf/provider-aws/lib/ec2";
 import { Construct } from "constructs";
 import { AwsSecurityGroup, AwsSecurityGroupConfig } from "../network/aws_security_group";
+import { AwsEip } from "./aws_eip";
 import { AwsKeyPair } from "./aws_key_pair";
 
 export interface AwsEc2ConfigCreatingKeyPair {
@@ -9,7 +11,7 @@ export interface AwsEc2ConfigCreatingKeyPair {
   ami: string;
   instanceType: string;
   securityGroupConfig: AwsSecurityGroupConfig;
-  associatePublicIpAddress: boolean;
+  associateEip: boolean;
 }
 export interface AwsEc2ConfigExistingKeyPair {
   keyName: string;
@@ -17,7 +19,7 @@ export interface AwsEc2ConfigExistingKeyPair {
   ami: string;
   instanceType: string;
   securityGroupConfig: AwsSecurityGroupConfig;
-  associatePublicIpAddress: boolean;
+  associateEip: boolean;
 }
 export type AwsEc2Config = AwsEc2ConfigCreatingKeyPair | AwsEc2ConfigExistingKeyPair;
 
@@ -60,11 +62,19 @@ export class AwsEc2 extends Construct {
       ami: config.ami,
       instanceType: config.instanceType,
       subnetId,
-      associatePublicIpAddress: config.associatePublicIpAddress,
+      associatePublicIpAddress: (config.associateEip) ? true: false,
       vpcSecurityGroupIds: [
         new AwsSecurityGroup(this, "SG", usage, vpcId, config.securityGroupConfig, tags).resource.id
       ], 
       tags: ec2Tags,
     });
+
+    if (config.associateEip) {
+      const eip = new AwsEip(this, "EIP", `${resourceCode}-${usage}`, tags);
+      new EipAssociation(this, `EIP-ASS-${resourceCode}-${usage}`, {
+        instanceId: this.resource.id,
+        allocationId: eip.resource.allocationId,
+      });
+    }
   }
 }
